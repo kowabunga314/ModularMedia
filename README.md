@@ -2,7 +2,7 @@
 
 ## Docker instrutions to build image and launch the container
 
-cd to the dir with the docker file and run the following commands (replace the davidspumpkins with your own docer namespace):
+cd to the dir with the docker file and run the following commands (**replace the davidspumpkins with your own docker namespace**):
 
 #### Build the image
 
