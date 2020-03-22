@@ -10,7 +10,7 @@ cd to the dir with the docker file and run the following commands (**replace the
 
 #### Launch the container
 
-`docker run -p 6969:6969 davidspumpkins/modular`
+`docker run -p 6969:5000 davidspumpkins/modular`
 
 Navigate to the app in your browser: http://0.0.0.0:6969/
 

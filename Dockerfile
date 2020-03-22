@@ -6,13 +6,16 @@ WORKDIR /usr/src/app
 # copy all the files to the container
 COPY . .
 
+ENV FLASK_APP "app"
+ENV FLASK_DEBUG True
+
 # install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # tell the port number the container should expose
-EXPOSE 6969
+EXPOSE 5000
+
 
 # run the command
-CMD ["python", "./app.py"]
-
-
+CMD ["python", "./dbcreate.py"]
+CMD flask run --host=0.0.0.0
