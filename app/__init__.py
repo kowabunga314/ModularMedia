@@ -2,6 +2,8 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
+from config import Config
+import os
 
 
 # init SQLAlchemy so we can use it later in our models
@@ -11,7 +13,7 @@ def create_app():
     app = Flask(__name__)
 
     app.config['SECRET_KEY'] = 'Dingobaby68+1' #this needs to be removed 
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(Config.BASE_DIR, 'db.sqlite')
 
     db.init_app(app)
     migrate = Migrate(app, db)
