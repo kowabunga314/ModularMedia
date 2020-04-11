@@ -19,6 +19,7 @@ __pycache__/
 ### Database
 #SQLite
 *.db
+*.sqlite
 
 # C extensions
 *.so
