@@ -1,4 +1,5 @@
 from flask import Flask, Blueprint, request
+from sqlalchemy.sql import text
 from app import db
 from .models import User
 from core.decorators import handle_exceptions
@@ -35,40 +36,27 @@ def create_user():
 
     return user_data
 
-@user.route(USER_BASE_URL + '/update', methods=['PUT'])
-def update_user():
+@user.route(USER_BASE_URL + '/update/<username>', methods=['PUT'])
+def update_user(username):
     data = request.json
 
     # Check that username was provided and is valid
-    if not data['username']:
-        return 'No username provided', 400
-    
-    # Populate query
-    query = '''
-        select *
-        from user
-        where name=":username"
-    '''
+    try:
+        user_data = User.query.filter(User.name == username).first()
+        if user_data is None:
+            raise ValueError('User not found!')
+    except Exception as e:
+        return 'User not found!', 400
 
-    # Set args
-    args = {
-        'username': data['username']
-    }
-
-    user_data = db.session.execute(query, args)
-
-    return user_data
-
-@user.route(USER_BASE_URL + '/archive', methods=['DELETE'])
-def archive_user():
-    data = request.json
-    user_data = User().create(
-        name=data['name'],
-        email=data['email'],
-        password1=data['password1'],
-        password2=data['password2']
+    user_data.update(
+        name=data.get('name', None),
+        email=data.get('email', None),
+        password1=data.get('password1', None),
+        password2=data.get('password2', None),
+        archived=data.get('archived', None)
     )
-    return user_data
+
+    return {'user_data': user_data.get()}
 
 @user.route(USER_BASE_URL + '/delete/<username>', methods=['DELETE'])
 def delete_user(username):

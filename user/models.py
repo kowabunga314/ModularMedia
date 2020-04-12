@@ -68,8 +68,8 @@ class User(UserMixin, db.Model):
 
         self.archived = archived if archived is not None else self.archived
 
-        db.session.commit(self)
-        return
+        db.session.commit()
+        return self.get()
 
     def delete(self):
         # TODO: implement delete method
