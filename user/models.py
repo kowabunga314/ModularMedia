@@ -1,20 +1,16 @@
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash
 from app import db
-from app.models import MediaObject
+from app.models import MediaAbstract, MediaObject
 from app.utils import generate_uuid
 from datetime import datetime
 import uuid
 import json
 
 class User(UserMixin, MediaObject):
-    # id = db.Column(db.Integer, primary_key=True) # primary keys are required by SQLAlchemy
-    # name = db.Column(db.String(64), index=True, unique=True)
-    # uuid = db.Column(db.String(36), index=True, unique=True, default=generate_uuid)
+    username = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)
     password = db.Column(db.String(128))
-    archived = db.Column(db.Boolean, default=False)
-    created_date = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __repr__(self):
         return '<User {}>'.format(self.name)
@@ -24,24 +20,31 @@ class User(UserMixin, MediaObject):
             'id': self.id,
             'uuid': self.uuid,
             'name': self.name,
+            'username': self.username,
             'email': self.email,
             'archived': self.archived
         }
-    
-    def _get_archived(self):
-        return {
-            'id': self.id,
-            'archived': self.archived
-        }
-    
-    def valid(self):
-        return False if self.archived else True
-    
-    def get(self):
+
+    def dict(self):
         if self.archived:
             return self._get_archived()
         else:
             return self._to_dict()
+
+    @staticmethod
+    def get(id=None, uuid=None, username=None, email=None):
+        if id is not None:
+            user = User.query.filter(User.id == id).first()
+        elif uuid is not None:
+            user = User.query.filter(User.uuid == uuid).first()
+        elif username is not None:
+            user = User.query.filter(User.username == username).first()
+        elif email is not None:
+            user = User.query.filter(User.email == email).first()
+        else:
+            user = None
+
+        return user
     
     def create(self, name, email, password1, password2):
         # Verify that passwords match
@@ -79,26 +82,22 @@ class User(UserMixin, MediaObject):
 
         db.session.commit()
         return self.get()
-
-    def delete(self):
-        # TODO: implement delete method
-        db.session.delete(self)
-        db.session.commit()
-        return
     
-    def is_following(self, target_user_name):
-        target_user = User.get(target_user_name)
-        relationship = Follow.get(self.id, target_user.id)
+    def is_following(self, target_user_id):
+        relationship = Follow.get(self.id, target_user_id)
+
+        return True if relationship.one() else False
+    
+    def belongs_to_group(self, group_id):
+        relationship = GroupMembership.query.filter(GroupMembership.member_id == self.id, GroupMembership.group_id == group_id)
 
         return True if relationship.one() else False
 
 
-class Follow(db.Model):
-    id = db.Column(db.Integer, primary_key=True) # primary keys are required by SQLAlchemy
+class Follow(MediaAbstract):
     originating_user = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     target_user = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     label = db.Column(db.String)
-    created_date = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __repr__(self):
         return '{} {} {}'.format(self.originating_user, self.label, self.target_user)
@@ -129,6 +128,7 @@ class Follow(db.Model):
         return [user.get() for user in users]
 
     def follow_user(self, ou, tu, label='following'):
+        # TODO: move check for archived user into class method
         self.originating_user = ou
         self.target_user = tu
         self.label = label
@@ -148,4 +148,49 @@ class Follow(db.Model):
         else:
             return None
 
+
+class Group(MediaObject):
+
+    def __repr__(self):
+        return '<Group {}>'.format(self.name)
+
+    @staticmethod
+    def get(id=None, uuid=None, name=None):
+        if id is not None:
+            group = Group.query.filter(Group.id == id).first()
+        elif uuid is not None:
+            group = Group.query.filter(Group.uuid == uuid).first()
+        elif name is not None:
+            group = Group.query.filter(Group.name == name).first()
+        else:
+            group = None
+
+        return group
+
+    def create(self, name=None):
+        pass
+
+    def get_members(self):
+        relationships = GroupMembership.query.filter(GroupMembership.group_id == self.id).all()
+        member_ids = [r.member_id for r in relationships]
+        members = User.query.filter(User.id.in_(member_ids)).all()
+        return [m for m in members]
+
+
+class GroupMembership(MediaAbstract):
+    group_id = db.Column(db.ForeignKey('group.id'), index=True)
+    member_id = db.Column(db.ForeignKey('user.id'), index=True)
+    label = db.Column(db.String(32), default='belongs to')
+
+    def __repr__(self):
+        return '{} {} {}'.format(self.member_id, self.label, self.group_id)
+    
+    @staticmethod
+    def get(group_id, member_id):
+        relatiohship = Group.query.filter(Group.group_id == group_id, Group.member_id == member_id).first()
+
+        if relatiohship:
+            return relatiohship
+        else:
+            return None
 

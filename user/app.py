@@ -26,7 +26,7 @@ def create_user():
 
     try:
         user_data = User().create(
-            name=data['name'],
+            username=data['name'],
             email=data['email'],
             password1=data['password1'],
             password2=data['password2']
@@ -49,7 +49,7 @@ def update_user(username):
         return 'User not found!', 400
 
     user_data.update(
-        name=data.get('name', None),
+        username=data.get('name', None),
         email=data.get('email', None),
         password1=data.get('password1', None),
         password2=data.get('password2', None),
