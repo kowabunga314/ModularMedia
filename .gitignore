@@ -180,4 +180,10 @@ env.bak/
 venv.bak/
 pip-selfcheck.json
 
+# local stuff
+.DS_Store
+*/.DS_Store
+
 # End of https://www.gitignore.io/api/venv,flask,python
+app/.DS_Store
+.DS_Store
