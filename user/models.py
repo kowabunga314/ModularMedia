@@ -1,24 +1,28 @@
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash
 from app import db
+from app.models import MediaObject
+from app.utils import generate_uuid
 from datetime import datetime
 import uuid
 import json
 
-class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True) # primary keys are required by SQLAlchemy
-    name = db.Column(db.String(64), index=True, unique=True)
+class User(UserMixin, MediaObject):
+    # id = db.Column(db.Integer, primary_key=True) # primary keys are required by SQLAlchemy
+    # name = db.Column(db.String(64), index=True, unique=True)
+    # uuid = db.Column(db.String(36), index=True, unique=True, default=generate_uuid)
     email = db.Column(db.String(120), index=True, unique=True)
     password = db.Column(db.String(128))
     archived = db.Column(db.Boolean, default=False)
     created_date = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __repr__(self):
-        return '<User {}'.format(self.name)
+        return '<User {}>'.format(self.name)
     
     def _to_dict(self):
         return {
             'id': self.id,
+            'uuid': self.uuid,
             'name': self.name,
             'email': self.email,
             'archived': self.archived
@@ -84,7 +88,9 @@ class User(UserMixin, db.Model):
     
     def is_following(self, target_user_name):
         target_user = User.get(target_user_name)
-        relatiohship = Follow.get(self.id, target_user.id)
+        relationship = Follow.get(self.id, target_user.id)
+
+        return True if relationship.one() else False
 
 
 class Follow(db.Model):
