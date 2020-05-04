@@ -71,6 +71,11 @@ def delete_user(username):
 
     return 'Successfully deleted {}'.format(username)
 
+
+###########################################
+########### User Relationships ############
+###########################################
+
 @user.route(USER_BASE_URL + '/<username>/following', methods=['GET'])
 def get_following(username):
     if username:
@@ -172,5 +177,75 @@ def unfollow_user():
     else:
         return '{} not found.'.format('target_user' if originating_user else 'originating_user')
 
+
+###########################################
+########## Group Relationships ############
+###########################################
+
+@user.route(USER_BASE_URL + '/create', methods=['POST'])
+def create_group():
+    # Create group 
+    # Create membership record for group creator
+    pass
+
+@user.route(USER_BASE_URL + '/update', methods=['PUT'])
+def update_group_name():
+    # Check for admin status
+    # Change name
+    # Update DB
+    pass
+
+@user.route(USER_BASE_URL + '/delete', methods=['DELETE'])
+def delete_group():
+    # Check for admin status
+    # Delete self from DB
+    pass
+
+@user.route(USER_BASE_URL + '/join', methods=['POST'])
+def join_group():
+    """
+        Creates relationship: user belongs to group
+        Request payload: 
+        {
+            user: username,
+            group: group ID
+        }
+    """
+    data = request.json
+    originating_name = data.get('originating_user', None)
+    target_name = data.get('target_user', None)
+
+    if originating_name is None or target_name is None:
+        return 'No username provided.', 400
+    
+    originating_user = User.query.filter(
+            User.name == originating_name,
+            User.archived == False
+        ).first()
+    target_user = User.query.filter(
+            User.name == target_name,
+            User.archived == False
+        ).first()
+
+    if originating_user and originating_user.valid() and target_user and target_user.valid():
+        following = Follow().follow_user(originating_user.id, target_user.id, 'following')
+        if following:
+            return {'following': following}
+        else:
+            return 'Failed to create relationship.', 500
+    else:
+        return '{} not found.'.format('target_user' if originating_user else 'originating_user')
+
+def leave_group():
+    # Call leave group method
+    pass
+
+def get_groups():
+    # Call get all groups method
+    pass
+
+def get_group_members():
+    # Call get all members method
+    pass
 
 

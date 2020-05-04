@@ -1,4 +1,4 @@
-from flask import Flask, requestß
+from flask import Flask, request
 from user.models import User
 import os
 

@@ -13,7 +13,6 @@ class MediaAbstract(db.Model):
     created_date = db.Column(db.DateTime, default=datetime.utcnow)
 
     def delete(self):
-        # TODO: implement delete method
         db.session.delete(self)
         db.session.commit()
         return

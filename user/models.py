@@ -46,7 +46,8 @@ class User(UserMixin, MediaObject):
 
         return user
     
-    def create(self, name, email, password1, password2):
+    @staticmethod
+    def create(name, email, password1, password2):
         # Verify that passwords match
         if password1 != password2:
             msg = 'passwords do not match.'
@@ -167,8 +168,28 @@ class Group(MediaObject):
 
         return group
 
-    def create(self, name=None):
-        pass
+    @staticmethod
+    def create(name=None):
+        group = Group(name=name)
+        
+        db.session.add(group)
+        db.session.commit()
+
+    def add_member(self, user_id):
+        user = User.query.filter(User.id == user_id).one()
+
+        if user:
+            gm = GroupMembership(group_id=self.id, member_id=user_id)
+        else:
+            raise ValueError('User not found')
+    
+    def remove_member(self, user_id):
+        gm = GroupMembership.query.filter(group_id=self.id, member_id=user_id).one()
+
+        if gm:
+            gm.delete()
+        else:
+            raise ValueError('User does not belong to this group')
 
     def get_members(self):
         relationships = GroupMembership.query.filter(GroupMembership.group_id == self.id).all()
@@ -181,6 +202,12 @@ class GroupMembership(MediaAbstract):
     group_id = db.Column(db.ForeignKey('group.id'), index=True)
     member_id = db.Column(db.ForeignKey('user.id'), index=True)
     label = db.Column(db.String(32), default='belongs to')
+
+    def __init__(self, group_id, member_id, label=None):
+        self.group_id = group_id
+        self.member_id = member_id
+        if label is not None:
+            self.label = label
 
     def __repr__(self):
         return '{} {} {}'.format(self.member_id, self.label, self.group_id)
