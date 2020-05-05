@@ -1,4 +1,4 @@
-from flask import Flask, Blueprint, request
+from flask import Flask, Blueprint, request, Response
 from sqlalchemy.sql import text
 from app import db
 from .models import User, Follow
@@ -11,56 +11,86 @@ user = Blueprint('user', __name__)
 
 USER_BASE_URL = '/user'
 
-# @handle_exceptions
-@user.route(USER_BASE_URL + '/<username>', methods=['GET'])
-def get_user(username=None):
-    if username:
-        user_data = User.query.filter(User.name == username).first()
-        return user_data.get()
+@user.route(USER_BASE_URL, methods=['GET'])
+def get_user():
+    # Gety querystring args
+    uuid = request.args.get('uuid', None)
+    email = request.args.get('email', None)
+    username = request.args.get('username', None)
+
+    # Query for user based on which args we get
+    if uuid:
+        user_data = User.get_user(uuid=uuid)
+    elif email:
+        user_data = User.get_user(email=email)
+    elif username:
+        user_data = User.get_user(username=username)
     else:
-        return 'No username provided.', 400
+        return 'Please provide either uuid, username, or email.', 400
+
+    if user_data:
+        # User was found, return as dictionary
+        return user_data.dict()
+    else:
+        return 'User not found.', 404
 
 @user.route(USER_BASE_URL + '/create', methods=['POST'])
 def create_user():
     data = request.json
 
     try:
-        user_data = User().create(
-            username=data['name'],
+        user_data = User.create(
+            name=data['name'],
+            username=data['username'],
             email=data['email'],
             password1=data['password1'],
             password2=data['password2']
         )
     except ValueError as e:
         return e.args[0], 400
+    except Exception as e:
+        return e.args[0], 400
 
-    return user_data
+    return Response(json.dumps(user_data), mimetype='application/json', status=201)
 
-@user.route(USER_BASE_URL + '/update/<username>', methods=['PUT'])
-def update_user(username):
-    data = request.json
+@user.route(USER_BASE_URL + '/update', methods=['PUT'])
+def update_user():
+    # Gety querystring args
+    uuid = request.args.get('uuid', None)
+    email = request.args.get('email', None)
+    username = request.args.get('username', None)
 
-    # Check that username was provided and is valid
     try:
-        user_data = User.query.filter(User.name == username).first()
-        if user_data is None:
+        # Query for user based on which args we get
+        if uuid:
+            user_data = User.get_user(uuid=uuid)
+        elif email:
+            user_data = User.get_user(email=email)
+        elif username:
+            user_data = User.get_user(username=username)
+        else:
             raise ValueError('User not found!')
     except Exception as e:
         return 'User not found!', 400
+    # Exit if user not found
+    if not user_data:
+        return 'User not found!', 400
 
+    data = request.json
     user_data.update(
-        username=data.get('name', None),
+        name=data.get('name', None),
+        username=data.get('username', None),
         email=data.get('email', None),
         password1=data.get('password1', None),
         password2=data.get('password2', None),
         archived=data.get('archived', None)
     )
 
-    return {'user_data': user_data.get()}
+    return user_data.dict()
 
 @user.route(USER_BASE_URL + '/delete/<username>', methods=['DELETE'])
 def delete_user(username):
-    users = [user for user in User().query.filter(User.name == username)]
+    users = [user for user in User.query.filter(User.username == username)]
     if len(users) < 1:
         return 'User {} not found.'.format(username), 400
 
@@ -69,7 +99,7 @@ def delete_user(username):
     except Exception as e:
         return e.args[0], 400
 
-    return 'Successfully deleted {}'.format(username)
+    return {'deleted_user': username}
 
 
 ###########################################

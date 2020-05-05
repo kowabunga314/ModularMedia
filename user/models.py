@@ -12,8 +12,14 @@ class User(UserMixin, MediaObject):
     email = db.Column(db.String(120), index=True, unique=True)
     password = db.Column(db.String(128))
 
+    def __init__(self, username, email, password, name=None):
+        self.username = username
+        self.email = email
+        self.password = password
+        super().__init__(name=name)
+
     def __repr__(self):
-        return '<User {}>'.format(self.name)
+        return '<User {}>'.format(self.username)
     
     def _to_dict(self):
         return {
@@ -32,7 +38,7 @@ class User(UserMixin, MediaObject):
             return self._to_dict()
 
     @staticmethod
-    def get(id=None, uuid=None, username=None, email=None):
+    def get_user(id=None, uuid=None, username=None, email=None):
         if id is not None:
             user = User.query.filter(User.id == id).first()
         elif uuid is not None:
@@ -47,14 +53,14 @@ class User(UserMixin, MediaObject):
         return user
     
     @staticmethod
-    def create(name, email, password1, password2):
+    def create(name, username, email, password1, password2):
         # Verify that passwords match
         if password1 != password2:
             msg = 'passwords do not match.'
             raise ValueError(msg)
 
         # Verify that name is unique
-        if User.query.filter(User.name == name).count():
+        if User.query.filter(User.username == username).count():
             raise ValueError('That username is already taken!')
 
         # Verify that email is unique
@@ -64,15 +70,17 @@ class User(UserMixin, MediaObject):
         # Create the user
         user = User(
             name=name,
+            username=username,
             email=email,
             password=generate_password_hash(password1)
         )
         db.session.add(user)
         db.session.commit()
-        return(json.dumps({'success': user._to_dict()}))
+        return user.dict()
 
-    def update(self, name=None, email=None, password1=None, password2=None, archived=None):
+    def update(self, name=None, username=None, email=None, password1=None, password2=None, archived=None):
         self.name = name or self.name
+        self.username = username or self.username
         self.email = email or self.email
 
         # Handle password change
@@ -82,7 +90,7 @@ class User(UserMixin, MediaObject):
         self.archived = archived if archived is not None else self.archived
 
         db.session.commit()
-        return self.get()
+        return self.dict()
     
     def is_following(self, target_user_id):
         relationship = Follow.get(self.id, target_user_id)
