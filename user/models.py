@@ -104,8 +104,8 @@ class User(UserMixin, MediaObject):
 
 
 class Follow(MediaAbstract):
-    originating_user = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
-    target_user = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    originating_user = db.Column(db.Integer, db.ForeignKey('user.uuid'), index=True)
+    target_user = db.Column(db.Integer, db.ForeignKey('user.uuid'), index=True)
     label = db.Column(db.String)
 
     def __repr__(self):

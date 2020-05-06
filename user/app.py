@@ -88,14 +88,29 @@ def update_user():
 
     return user_data.dict()
 
-@user.route(USER_BASE_URL + '/delete/<username>', methods=['DELETE'])
-def delete_user(username):
-    users = [user for user in User.query.filter(User.username == username)]
-    if len(users) < 1:
-        return 'User {} not found.'.format(username), 400
+@user.route(USER_BASE_URL + '/delete', methods=['DELETE'])
+def delete_user():
+    # Gety querystring args
+    uuid = request.args.get('uuid', None)
+    email = request.args.get('email', None)
+    username = request.args.get('username', None)
+
+    # Query for user based on which args we get
+    if uuid:
+        user_data = User.get_user(uuid=uuid)
+    elif email:
+        user_data = User.get_user(email=email)
+    elif username:
+        user_data = User.get_user(username=username)
+    else:
+        return 'Please provide either uuid, username, or email.', 400
+
+    if user_data is None:
+        return 'User not found.', 400
 
     try:
-        users[0].delete()
+        username = user_data.username
+        user_data.delete()
     except Exception as e:
         return e.args[0], 400
 
@@ -106,10 +121,10 @@ def delete_user(username):
 ########### User Relationships ############
 ###########################################
 
-@user.route(USER_BASE_URL + '/<username>/following', methods=['GET'])
-def get_following(username):
-    if username:
-        user = User.query.filter(User.name == username, User.archived == False).first()
+@user.route(USER_BASE_URL + '/<uuid>/following', methods=['GET'])
+def get_following(uuid):
+    if uuid:
+        user = User.query.filter(User.uuid == uuid, User.archived == False).first()
 
         if user and user.valid():
             following = Follow().get_following(user.id)
@@ -120,7 +135,7 @@ def get_following(username):
         else:
             return 'User not found.', 400
     else:
-        return 'No username provided.', 400
+        return 'No uuid provided.', 400
 
 @user.route(USER_BASE_URL + '/<username>/followers', methods=['GET'])
 def get_followers(username):
