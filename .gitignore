@@ -187,3 +187,4 @@ pip-selfcheck.json
 # End of https://www.gitignore.io/api/venv,flask,python
 app/.DS_Store
 .DS_Store
+tmp/
