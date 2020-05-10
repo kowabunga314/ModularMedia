@@ -1,5 +1,6 @@
 from flask import Flask, Blueprint, request, Response
 from sqlalchemy.sql import text
+from http import HTTPStatus
 from app import db
 from .models import User, Follow
 from core.decorators import handle_exceptions
@@ -127,9 +128,12 @@ def get_following(uuid):
         user = User.query.filter(User.uuid == uuid, User.archived == False).first()
 
         if user and user.valid():
-            following = Follow().get_following(user.id)
+            following = user.get_following()
             if following:
-                return {'following': following}
+                return {
+                    'following': following,
+                    'count': len(following)
+                }
             else:
                 return 'User {} ({}) is not following any users.'.format(user.name, user.id), 200
         else:
@@ -137,16 +141,19 @@ def get_following(uuid):
     else:
         return 'No uuid provided.', 400
 
-@user.route(USER_BASE_URL + '/<username>/followers', methods=['GET'])
-def get_followers(username):
-    if username:
-        user = User.query.filter(User.name == username, User.archived == False).first()
+@user.route(USER_BASE_URL + '/<uuid>/followers', methods=['GET'])
+def get_followers(uuid):
+    if uuid:
+        user = User.query.filter(User.uuid == uuid, User.archived == False).first()
 
         if user and user.valid():
-            followers = Follow().get_followers(user.id)
+            followers = user.get_followers()
 
             if followers:
-                return {'followers': followers}
+                return {
+                    'followers': followers,
+                    'count': len(followers)
+                }
             else:
                 return 'User {} ({}) is not followed by any users.'.format(user.name, user.id), 200
         else:
@@ -158,30 +165,30 @@ def follow_user():
         Creates relationship: originating user following target user
         Request payload: 
         {
-            originating_user: username,
-            target_user: username
+            originating_id: uuid,
+            target_id: uuid
         }
     """
     data = request.json
-    originating_name = data.get('originating_user', None)
-    target_name = data.get('target_user', None)
+    originating_uuid = data.get('originating_id', None)
+    target_uuid = data.get('target_id', None)
 
-    if originating_name is None or target_name is None:
+    if originating_uuid is None or target_uuid is None:
         return 'No username provided.', 400
     
     originating_user = User.query.filter(
-            User.name == originating_name,
+            User.uuid == originating_uuid,
             User.archived == False
         ).first()
     target_user = User.query.filter(
-            User.name == target_name,
+            User.uuid == target_uuid,
             User.archived == False
         ).first()
 
     if originating_user and originating_user.valid() and target_user and target_user.valid():
         following = Follow().follow_user(originating_user.id, target_user.id, 'following')
         if following:
-            return {'following': following}
+            return {'following': following}, HTTPStatus.CREATED
         else:
             return 'Failed to create relationship.', 500
     else:

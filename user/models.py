@@ -1,5 +1,6 @@
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash
+from sqlalchemy.orm import relationship
 from app import db
 from app.models import MediaAbstract, MediaObject
 from app.utils import generate_uuid
@@ -91,6 +92,12 @@ class User(UserMixin, MediaObject):
 
         db.session.commit()
         return self.dict()
+
+    def get_followers(self):
+        return [f.originating_user.dict() for f in self.followers]
+
+    def get_following(self):
+        return [f.target_user.dict() for f in self.following]
     
     def is_following(self, target_user_id):
         relationship = Follow.get(self.id, target_user_id)
@@ -104,42 +111,26 @@ class User(UserMixin, MediaObject):
 
 
 class Follow(MediaAbstract):
-    originating_user = db.Column(db.Integer, db.ForeignKey('user.uuid'), index=True)
-    target_user = db.Column(db.Integer, db.ForeignKey('user.uuid'), index=True)
+    originating_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    target_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     label = db.Column(db.String)
 
     def __repr__(self):
-        return '{} {} {}'.format(self.originating_user, self.label, self.target_user)
+        return '{} {} {}'.format(self.originating_id, self.label, self.target_id)
     
     @staticmethod
     def get(ou_id, tu_id):
-        relatiohship = Follow.query.filter(Follow.originating_user == ou_id, Follow.target_user == tu_id).first()
+        relatiohship = Follow.query.filter(Follow.originating_id == ou_id, Follow.target_id == tu_id).first()
 
         if relatiohship:
             return relatiohship
         else:
             return None
 
-    def get_following(self, user_id):
-        relationships = Follow.query.filter(Follow.originating_user == user_id).all()
-        target_users = [relationship.target_user for relationship in relationships]
-
-        users = User.query.filter(User.id.in_(target_users)).all()
-
-        return [user.get() for user in users]
-
-    def get_followers(self, user_id):
-        relationships = Follow.query.filter(Follow.target_user == user_id).all()
-        originating_users = [relationship.originating_user for relationship in relationships]
-
-        users = User.query.filter(User.id.in_(originating_users)).all()
-
-        return [user.get() for user in users]
-
     def follow_user(self, ou, tu, label='following'):
         # TODO: move check for archived user into class method
-        self.originating_user = ou
-        self.target_user = tu
+        self.originating_id = ou
+        self.target_id = tu
         self.label = label
 
         db.session.add(self)
@@ -148,7 +139,7 @@ class Follow(MediaAbstract):
         return self.__repr__()
 
     def unfollow_user(self, ou, tu):
-        relationship = Follow.query.filter(Follow.originating_user == ou, Follow.target_user == tu).first()
+        relationship = Follow.query.filter(Follow.originating_id == ou, Follow.target_id == tu).first()
 
         if relationship:
             db.session.delete(relationship)
@@ -157,6 +148,18 @@ class Follow(MediaAbstract):
         else:
             return None
 
+User.following = relationship(Follow,
+                                foreign_keys=[Follow.originating_id],
+                                backref='originating_user',
+                                order_by=Follow.target_id,
+                                lazy='dynamic',
+                                cascade='delete')
+User.followers = relationship(Follow,
+                                foreign_keys=[Follow.target_id],
+                                backref='target_user',
+                                order_by=Follow.originating_id,
+                                lazy='dynamic',
+                                cascade='delete')
 
 class Group(MediaObject):
 
