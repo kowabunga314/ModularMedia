@@ -15,7 +15,7 @@ def create_app():
 
     app.config['SECRET_KEY'] = 'Dingobaby68+1' #this needs to be removed 
     if env == 'DOCKER':
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(Config.BASE_DIR, 'data', 'db.sqlite')
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(Config.BASE_DIR, 'db.sqlite')
     else:
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(Config.BASE_DIR, 'db.sqlite')
 
