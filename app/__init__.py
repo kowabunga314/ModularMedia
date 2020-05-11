@@ -11,9 +11,13 @@ db = SQLAlchemy()
 
 def create_app():
     app = Flask(__name__)
+    env = os.environ.get('ENV', 'DEV')
 
     app.config['SECRET_KEY'] = 'Dingobaby68+1' #this needs to be removed 
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(Config.BASE_DIR, 'db.sqlite')
+    if env == 'DOCKER':
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(Config.BASE_DIR, 'data', 'db.sqlite')
+    else:
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(Config.BASE_DIR, 'db.sqlite')
 
     db.init_app(app)
     migrate = Migrate(app, db)

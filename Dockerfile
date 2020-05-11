@@ -19,4 +19,4 @@ EXPOSE 5000
 
 # run the command
 CMD ["python", "./dbcreate.py"]
-CMD flask db upgrade && flask run --host=0.0.0.0
+CMD export ENV=DOCKER && flask db upgrade && flask run --host=0.0.0.0
