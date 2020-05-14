@@ -2,7 +2,7 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash
 from sqlalchemy.orm import relationship
 from app import db
-from app.models import MediaAbstract, MediaObject
+from app.models import Base, MediaObject
 from app.utils import generate_uuid
 from datetime import datetime
 import uuid
@@ -102,7 +102,7 @@ class User(UserMixin, MediaObject):
     def is_following(self, target_user_id):
         relationship = Follow.get(self.id, target_user_id)
 
-        return True if relationship.one() else False
+        return True if relationship else False
     
     def belongs_to_group(self, group_id):
         relationship = GroupMembership.query.filter(GroupMembership.member_id == self.id, GroupMembership.group_id == group_id)
@@ -110,7 +110,7 @@ class User(UserMixin, MediaObject):
         return True if relationship.one() else False
 
 
-class Follow(MediaAbstract):
+class Follow(Base):
     originating_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     target_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     label = db.Column(db.String)
@@ -129,14 +129,24 @@ class Follow(MediaAbstract):
 
     def follow_user(self, ou, tu, label='following'):
         # TODO: move check for archived user into class method
-        self.originating_id = ou
-        self.target_id = tu
-        self.label = label
+    
+        originating_user = User.query.filter(
+                User.uuid == ou,
+                User.archived == False
+            ).first()
+        target_user = User.query.filter(
+                User.uuid == tu,
+                User.archived == False
+            ).first()
 
-        db.session.add(self)
-        db.session.commit()
+        if originating_user and originating_user.valid() and target_user and target_user.valid() and not originating_user.is_following(target_user.id):
+            self.originating_id = ou
+            self.target_id = tu
+            self.label = label
 
-        return self.__repr__()
+            db.session.add(self)
+            db.session.commit()
+            return self.__repr__()
 
     def unfollow_user(self, ou, tu):
         relationship = Follow.query.filter(Follow.originating_id == ou, Follow.target_id == tu).first()
@@ -153,13 +163,15 @@ User.following = relationship(Follow,
                                 backref='originating_user',
                                 order_by=Follow.target_id,
                                 lazy='dynamic',
-                                cascade='delete')
+                                cascade='all,delete,delete-orphan'
+                            )
 User.followers = relationship(Follow,
                                 foreign_keys=[Follow.target_id],
                                 backref='target_user',
                                 order_by=Follow.originating_id,
                                 lazy='dynamic',
-                                cascade='delete')
+                                cascade='all,delete,delete-orphan'
+                            )
 
 class Group(MediaObject):
 
@@ -209,7 +221,7 @@ class Group(MediaObject):
         return [m for m in members]
 
 
-class GroupMembership(MediaAbstract):
+class GroupMembership(Base):
     group_id = db.Column(db.ForeignKey('group.id'), index=True)
     member_id = db.Column(db.ForeignKey('user.id'), index=True)
     label = db.Column(db.String(32), default='belongs to')

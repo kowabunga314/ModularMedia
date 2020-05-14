@@ -174,25 +174,16 @@ def follow_user():
     target_uuid = data.get('target_id', None)
 
     if originating_uuid is None or target_uuid is None:
-        return 'No username provided.', 400
-    
-    originating_user = User.query.filter(
-            User.uuid == originating_uuid,
-            User.archived == False
-        ).first()
-    target_user = User.query.filter(
-            User.uuid == target_uuid,
-            User.archived == False
-        ).first()
+        return 'No username provided.', HTTPStatus.BAD_REQUEST
 
-    if originating_user and originating_user.valid() and target_user and target_user.valid():
-        following = Follow().follow_user(originating_user.id, target_user.id, 'following')
+    try:
+        following = Follow().follow_user(originating_uuid, target_uuid, 'following')
         if following:
             return {'following': following}, HTTPStatus.CREATED
         else:
-            return 'Failed to create relationship.', 500
-    else:
-        return '{} not found.'.format('target_user' if originating_user else 'originating_user')
+            return 'Failed to create relationship.', HTTPStatus.INTERNAL_SERVER_ERROR
+    except Exception as e:
+        return 'Something went wrong.', HTTPStatus.INTERNAL_SERVER_ERROR
 
 @user.route(USER_BASE_URL + '/unfollow', methods=['DELETE'])
 def unfollow_user():
