@@ -127,7 +127,8 @@ class Follow(Base):
         else:
             return None
 
-    def follow_user(self, ou, tu, label='following'):
+    @staticmethod
+    def follow_user(ou, tu, label='following'):
         # Get users referenced in params
         originating_user = User.query.filter(
                 User.uuid == ou,
@@ -140,13 +141,14 @@ class Follow(Base):
 
         # Validate both users exist, are valid, and relationship does not already exist
         if originating_user and originating_user.valid() and target_user and target_user.valid() and not originating_user.is_following(target_user.uuid):
-            self.originating_id = ou
-            self.target_id = tu
-            self.label = label
+            relationship = Follow()
+            relationship.originating_id = ou
+            relationship.target_id = tu
+            relationship.label = label
 
-            db.session.add(self)
+            db.session.add(relationship)
             db.session.commit()
-            return self.__repr__()
+            return relationship.__repr__()
 
     @staticmethod
     def unfollow_user(ou, tu):

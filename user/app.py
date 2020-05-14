@@ -177,7 +177,7 @@ def follow_user():
         return 'No username provided.', HTTPStatus.BAD_REQUEST
 
     try:
-        following = Follow().follow_user(originating_uuid, target_uuid, 'following')
+        following = Follow.follow_user(originating_uuid, target_uuid, 'following')
         if following:
             return {'following': following}, HTTPStatus.CREATED
         else:
@@ -203,7 +203,7 @@ def unfollow_user():
         return 'No uuid provided.', 400
 
     try:
-        relationship = Follow().unfollow_user(originating_id, target_id)
+        relationship = Follow.unfollow_user(originating_id, target_id)
         if relationship:
             return {'status': relationship}, HTTPStatus.OK
         else:
