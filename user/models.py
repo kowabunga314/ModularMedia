@@ -100,7 +100,7 @@ class User(UserMixin, MediaObject):
         return [f.target_user.dict() for f in self.following]
     
     def is_following(self, target_user_id):
-        relationship = Follow.get(self.id, target_user_id)
+        relationship = Follow.get(self.uuid, target_user_id)
 
         return True if relationship else False
     
@@ -128,7 +128,28 @@ class Follow(Base):
             return None
 
     def follow_user(self, ou, tu, label='following'):
-        # TODO: move check for archived user into class method
+        # Get users referenced in params
+        originating_user = User.query.filter(
+                User.uuid == ou,
+                User.archived == False
+            ).first()
+        target_user = User.query.filter(
+                User.uuid == tu,
+                User.archived == False
+            ).first()
+
+        # Validate both users exist, are valid, and relationship does not already exist
+        if originating_user and originating_user.valid() and target_user and target_user.valid() and not originating_user.is_following(target_user.uuid):
+            self.originating_id = ou
+            self.target_id = tu
+            self.label = label
+
+            db.session.add(self)
+            db.session.commit()
+            return self.__repr__()
+
+    @staticmethod
+    def unfollow_user(ou, tu):
     
         originating_user = User.query.filter(
                 User.uuid == ou,
@@ -139,17 +160,12 @@ class Follow(Base):
                 User.archived == False
             ).first()
 
-        if originating_user and originating_user.valid() and target_user and target_user.valid() and not originating_user.is_following(target_user.id):
-            self.originating_id = ou
-            self.target_id = tu
-            self.label = label
-
-            db.session.add(self)
-            db.session.commit()
-            return self.__repr__()
-
-    def unfollow_user(self, ou, tu):
-        relationship = Follow.query.filter(Follow.originating_id == ou, Follow.target_id == tu).first()
+        if originating_user and originating_user.valid() and target_user and target_user.valid() and originating_user.is_following(target_user.uuid):
+            relationship = Follow().query\
+                                .filter(Follow.originating_id == originating_user.uuid)\
+                                .filter(Follow.target_id == target_user.uuid).first()
+        else:
+            relationship = None
 
         if relationship:
             db.session.delete(relationship)

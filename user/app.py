@@ -191,34 +191,25 @@ def unfollow_user():
         Removes relationship: originating user following target user
         Request payload: 
         {
-            originating_user: username,
-            target_user: username
+            originating_id: uuid,
+            target_id: uuid
         }
     """
     data = request.json
-    originating_name = data.get('originating_user', None)
-    target_name = data.get('target_user', None)
+    originating_id = data.get('originating_id', None)
+    target_id = data.get('target_id', None)
 
-    if originating_name is None or target_name is None:
-        return 'No username provided.', 400
-    
-    originating_user = User.query.filter(
-            User.name == originating_name,
-            User.archived == False
-        ).first()
-    target_user = User.query.filter(
-            User.name == target_name,
-            User.archived == False
-        ).first()
+    if originating_id is None or target_id is None:
+        return 'No uuid provided.', 400
 
-    if originating_user.valid() and target_user.valid():
-        relationship = Follow().unfollow_user(originating_user.id, target_user.id)
+    try:
+        relationship = Follow().unfollow_user(originating_id, target_id)
         if relationship:
-            return {'status': relationship}
+            return {'status': relationship}, HTTPStatus.OK
         else:
-            return '{} is not following {}'.format(originating_user.name, target_user.name)
-    else:
-        return '{} not found.'.format('target_user' if originating_user else 'originating_user')
+            return 'Relationship does not exist', HTTPStatus.BAD_REQUEST
+    except Exception as e:
+        return e, HTTPStatus.BAD_REQUEST
 
 
 ###########################################
