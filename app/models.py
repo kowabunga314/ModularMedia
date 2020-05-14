@@ -7,7 +7,7 @@ import uuid
 import json
 
 
-class MediaAbstract(db.Model):
+class Base(db.Model):
     __abstract__ = True
     id = db.Column(db.Integer, primary_key=True) # primary keys are required by SQLAlchemy
     created_date = db.Column(db.DateTime, default=datetime.utcnow)
@@ -17,7 +17,7 @@ class MediaAbstract(db.Model):
         db.session.commit()
         return
 
-class MediaObject(MediaAbstract):
+class MediaObject(Base):
     __abstract__ = True
     name = db.Column(db.String(64))
     uuid = db.Column(db.String(36), index=True, unique=True, default=generate_uuid)
