@@ -9,6 +9,10 @@ cd to the dir with the docker file and run the following commands (**replace the
 
 Navigate to the app in your browser: http://0.0.0.0:6969/
 
+### View running logs
+docker logs --tail 50 --follow --timestamps <container_id>
+
+https://docs.docker.com/engine/reference/commandline/logs/
 
 ### Database Stuff ###
 
