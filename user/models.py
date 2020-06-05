@@ -8,6 +8,7 @@ from datetime import datetime
 import uuid
 import json
 
+
 class User(UserMixin, MediaObject):
     username = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)

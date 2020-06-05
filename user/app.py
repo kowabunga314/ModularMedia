@@ -35,6 +35,29 @@ def get_user():
     else:
         return 'User not found.', 404
 
+@user.route(USER_BASE_URL + '/find', methods=['GET'])
+def query_user():
+    # Gety querystring args
+    uuid = request.args.get('uuid', None)
+    email = request.args.get('email', None)
+    username = request.args.get('username', None)
+
+    # Query for user based on which args we get
+    if uuid:
+        user_data = User.get_user(uuid=uuid)
+    elif email:
+        user_data = User.get_user(email=email)
+    elif username:
+        user_data = User.get_user(username=username)
+    else:
+        return 'Please provide either uuid, username, or email.', 400
+
+    if user_data:
+        # User was found, return as dictionary
+        return user_data.dict()
+    else:
+        return 'User not found.', 404
+
 @user.route(USER_BASE_URL + '/create', methods=['POST'])
 def create_user():
     data = request.json
