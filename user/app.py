@@ -291,8 +291,16 @@ def leave_group():
     # Call leave group method
     pass
 
-def get_groups():
-    # Call get all groups method
+def query_groups():
+    # Call query groups method
+    pass
+
+def get_group():
+    # Call get group method
+    pass
+
+def get_all_groups():
+    # Get all groups in database
     pass
 
 def get_group_members():
