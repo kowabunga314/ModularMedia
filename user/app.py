@@ -36,25 +36,19 @@ def get_user():
         return 'User not found.', 404
 
 @user.route(USER_BASE_URL + '/find', methods=['GET'])
-def query_user():
+def query_users():
     # Gety querystring args
-    uuid = request.args.get('uuid', None)
-    email = request.args.get('email', None)
-    username = request.args.get('username', None)
+    params = {
+        'email': request.args.get('email', None),
+        'username': request.args.get('username', None),
+        'name': request.args.get('name', None)
+    }
 
-    # Query for user based on which args we get
-    if uuid:
-        user_data = User.get_user(uuid=uuid)
-    elif email:
-        user_data = User.get_user(email=email)
-    elif username:
-        user_data = User.get_user(username=username)
-    else:
-        return 'Please provide either uuid, username, or email.', 400
+    user_data = User.query_users(params)
 
     if user_data:
         # User was found, return as dictionary
-        return user_data.dict()
+        return {'users': [u.dict() for u in user_data]}
     else:
         return 'User not found.', 404
 
