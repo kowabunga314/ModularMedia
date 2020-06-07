@@ -24,3 +24,8 @@ https://docs.docker.com/engine/reference/commandline/logs/
 
 ### Undo migrations
 `flask db downgrade`
+
+### Mail stuff ###
+Send an email by running app/mail.py 
+Update mail settings - Lines 12, 13, and 33.
+Dhub email credentials:     email: 'modularyo@gmail.com'  password: Dhub6969
