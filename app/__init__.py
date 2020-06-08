@@ -13,7 +13,7 @@ def create_app():
     app = Flask(__name__)
     env = os.environ.get('ENV', 'DEV')
 
-    app.config['SECRET_KEY'] = 'Dingobaby68+1' #this needs to be removed 
+    app.config['SECRET_KEY'] = 'Dingobaby68+1 Or jeebus potat king56)' #this needs to be removed 
     if env == 'DOCKER':
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(Config.BASE_DIR, 'db.sqlite')
     else:

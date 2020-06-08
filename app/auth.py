@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, request, flash
+from flask import Blueprint, jsonify, render_template, redirect, url_for, request, flash
 from flask_login import login_user, logout_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user
@@ -13,9 +13,11 @@ def login():
 
 @auth.route('/login', methods=['POST'])
 def login_post():
-    email = request.form.get('email')
-    password = request.form.get('password')
-    remember = True if request.form.get('remember') else False
+    # Modified this to do JSON isntead of form. This piece works, but the template needs to be updated with JQuery or something
+    email = request.json.get('email')
+    ## TO DO: elton add auth via email OR username
+    password = request.json.get('password')
+    remember = True if request.json.get('remember') else False
 
     user = User.query.filter_by(email=email).first()
 
@@ -35,9 +37,11 @@ def signup():
 
 @auth.route('/signup', methods=['POST'])
 def signup_post():
-    email = request.form.get('email')
-    name = request.form.get('name')
-    password = request.form.get('password')
+    # Modified this to do JSON isntead of form. This piece works, but the template needs to be updated with JQuery or something
+    email = request.json.get('email')
+    name = request.json.get('name')
+    username = request.json.get('username')
+    password = request.json.get('password')
 
     user = User.query.filter_by(email=email).first() # if this returns a user, then the email already exists in database
 
@@ -46,7 +50,7 @@ def signup_post():
         return redirect(url_for('auth.signup'))
 
     # create new user with the form data. Hash the password so plaintext version isn't saved.
-    new_user = User(email=email, name=name, password=generate_password_hash(password, method='sha256'))
+    new_user = User(email=email, name=name, username=username, password=generate_password_hash(password, method='sha256'))
 
     # add the new user to the database
     db.session.add(new_user)
