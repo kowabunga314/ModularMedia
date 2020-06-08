@@ -35,6 +35,23 @@ def get_user():
     else:
         return 'User not found.', 404
 
+@user.route(USER_BASE_URL + '/find', methods=['GET'])
+def query_users():
+    # Gety querystring args
+    params = {
+        'email': request.args.get('email', None),
+        'username': request.args.get('username', None),
+        'name': request.args.get('name', None)
+    }
+
+    user_data = User.query_users(params)
+
+    if user_data:
+        # User was found, return as dictionary
+        return {'users': [u.dict() for u in user_data]}
+    else:
+        return 'User not found.', 404
+
 @user.route(USER_BASE_URL + '/create', methods=['POST'])
 def create_user():
     data = request.json
@@ -274,8 +291,16 @@ def leave_group():
     # Call leave group method
     pass
 
-def get_groups():
-    # Call get all groups method
+def query_groups():
+    # Call query groups method
+    pass
+
+def get_group():
+    # Call get group method
+    pass
+
+def get_all_groups():
+    # Get all groups in database
     pass
 
 def get_group_members():

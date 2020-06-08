@@ -8,6 +8,7 @@ from datetime import datetime
 import uuid
 import json
 
+
 class User(UserMixin, MediaObject):
     username = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)
@@ -37,6 +38,19 @@ class User(UserMixin, MediaObject):
             return self._get_archived()
         else:
             return self._to_dict()
+
+    @staticmethod
+    def query_users(params):
+        q = User.query.filter()
+
+        if params['username'] is not None:
+            q.filter(User.username == params['username'])
+        elif params['name'] is not None:
+            q.filter(User.name == params['name'])
+        elif params['email'] is not None:
+            q.filter(User.email == params['email'])
+        
+        return [user for user in q]
 
     @staticmethod
     def get_user(id=None, uuid=None, username=None, email=None):
