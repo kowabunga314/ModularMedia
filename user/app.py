@@ -14,6 +14,22 @@ USER_BASE_URL = '/user'
 
 @user.route(USER_BASE_URL, methods=['GET'])
 def get_user():
+    """
+        get:
+            summary: Get data of specific user.
+            description: Returns one user if given parameters match a user in the database.
+            parameters:
+                uuid: The uuid of a user
+                email: The email address of a user
+                name: The name of a user
+            responses:
+                200:
+                    description: Returned when a user was found
+                400:
+                    description: Returned when no valid parameters were specified.
+                404:
+                    description: Returned when no matching user was found.
+    """
     # Gety querystring args
     uuid = request.args.get('uuid', None)
     email = request.args.get('email', None)
@@ -37,7 +53,8 @@ def get_user():
 
 @user.route(USER_BASE_URL + '/find', methods=['GET'])
 def query_users():
-    # Gety querystring args
+    """"""
+    # Get querystring args
     params = {
         'email': request.args.get('email', None),
         'username': request.args.get('username', None),
@@ -54,6 +71,7 @@ def query_users():
 
 @user.route(USER_BASE_URL + '/create', methods=['POST'])
 def create_user():
+    """"""
     data = request.json
 
     try:
@@ -73,6 +91,7 @@ def create_user():
 
 @user.route(USER_BASE_URL + '/update', methods=['PUT'])
 def update_user():
+    """"""
     # Gety querystring args
     uuid = request.args.get('uuid', None)
     email = request.args.get('email', None)
@@ -108,6 +127,7 @@ def update_user():
 
 @user.route(USER_BASE_URL + '/delete', methods=['DELETE'])
 def delete_user():
+    """"""
     # Gety querystring args
     uuid = request.args.get('uuid', None)
     email = request.args.get('email', None)
@@ -141,6 +161,7 @@ def delete_user():
 
 @user.route(USER_BASE_URL + '/<uuid>/following', methods=['GET'])
 def get_following(uuid):
+    """"""
     if uuid:
         user = User.query.filter(User.uuid == uuid, User.archived == False).first()
 
@@ -160,6 +181,7 @@ def get_following(uuid):
 
 @user.route(USER_BASE_URL + '/<uuid>/followers', methods=['GET'])
 def get_followers(uuid):
+    """"""
     if uuid:
         user = User.query.filter(User.uuid == uuid, User.archived == False).first()
 
@@ -235,12 +257,14 @@ def unfollow_user():
 
 @user.route(USER_BASE_URL + '/create', methods=['POST'])
 def create_group():
+    """"""
     # Create group 
     # Create membership record for group creator
     pass
 
 @user.route(USER_BASE_URL + '/update', methods=['PUT'])
 def update_group_name():
+    """"""
     # Check for admin status
     # Change name
     # Update DB
@@ -248,6 +272,7 @@ def update_group_name():
 
 @user.route(USER_BASE_URL + '/delete', methods=['DELETE'])
 def delete_group():
+    """"""
     # Check for admin status
     # Delete self from DB
     pass
@@ -288,22 +313,27 @@ def join_group():
         return '{} not found.'.format('target_user' if originating_user else 'originating_user')
 
 def leave_group():
+    """"""
     # Call leave group method
     pass
 
 def query_groups():
+    """"""
     # Call query groups method
     pass
 
 def get_group():
+    """"""
     # Call get group method
     pass
 
 def get_all_groups():
+    """"""
     # Get all groups in database
     pass
 
 def get_group_members():
+    """"""
     # Call get all members method
     pass
 
