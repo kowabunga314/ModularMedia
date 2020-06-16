@@ -44,11 +44,11 @@ class User(UserMixin, MediaObject):
         q = User.query.filter()
 
         if params['username'] is not None:
-            q.filter(User.username == params['username'])
+            q = q.filter(User.username == params['username'])
         elif params['name'] is not None:
-            q.filter(User.name == params['name'])
+            q = q.filter(User.name == params['name'])
         elif params['email'] is not None:
-            q.filter(User.email == params['email'])
+            q = q.filter(User.email == params['email'])
         
         return [user for user in q]
 
