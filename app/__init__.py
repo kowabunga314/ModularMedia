@@ -48,7 +48,11 @@ def create_app():
 
     # blueprint for user app
     from app.modules.user.app import user as user_blueprint
-    app.register_blueprint(user_blueprint)
+    app.register_blueprint(user_blueprint, url_prefix='/user')
+
+    # blueprint for group app
+    from app.modules.group.app import group as group_blueprint
+    app.register_blueprint(group_blueprint, url_prefix='/group')
 
     return app
 

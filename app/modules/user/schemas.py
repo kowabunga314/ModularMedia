@@ -17,12 +17,3 @@ class FollowSchema(ma.Schema):
         # Fields to expose
         fields = ('originating_id', 'label', 'target_id', 'created_date')
 
-class GroupSchema(ma.Schema):
-    class Meta:
-        # Fields to expose
-        fields = ('uuid', 'name', 'created_date')
-
-class GroupMembershipSchema(ma.Schema):
-    class Meta:
-        # Fields to expose
-        fields = ('member_id', 'label', 'group_id', 'created_date')

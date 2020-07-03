@@ -3,6 +3,7 @@ from sqlalchemy.sql import text
 from http import HTTPStatus
 from app import db
 from .models import User, Follow
+from app.modules.group.models import Group
 from .schemas import UserSchema
 import os
 import json
@@ -13,7 +14,7 @@ user_schema = UserSchema()
 
 USER_BASE_URL = '/user'
 
-@user.route(USER_BASE_URL, methods=['GET'])
+@user.route('', methods=['GET'])
 def get_user():
     """
         get:
@@ -61,7 +62,7 @@ def get_user():
     else:
         return 'User not found.', 404
 
-@user.route(USER_BASE_URL + '/find', methods=['GET'])
+@user.route('/find', methods=['GET'])
 def query_users():
     """
         get:
@@ -103,7 +104,7 @@ def query_users():
     else:
         return 'User not found.', 404
 
-@user.route(USER_BASE_URL + '/create', methods=['POST'])
+@user.route('/create', methods=['POST'])
 def create_user():
     """
         Create a user
@@ -126,7 +127,7 @@ def create_user():
 
     return Response(json.dumps(user_data), mimetype='application/json', status=201)
 
-@user.route(USER_BASE_URL + '/update', methods=['PUT'])
+@user.route('/update', methods=['PUT'])
 def update_user():
     """
         Update a user
@@ -164,7 +165,7 @@ def update_user():
 
     return user_data.dict()
 
-@user.route(USER_BASE_URL + '/delete/<uuid>', methods=['DELETE'])
+@user.route('/delete/<uuid>', methods=['DELETE'])
 def delete_user(uuid):
     """
         Delete a user
@@ -191,7 +192,7 @@ def delete_user(uuid):
 ########### User Relationships ############
 ###########################################
 
-@user.route(USER_BASE_URL + '/<uuid>/following', methods=['GET'])
+@user.route('/<uuid>/following', methods=['GET'])
 def get_following(uuid):
     """
         Get list of other users a user is following
@@ -213,7 +214,7 @@ def get_following(uuid):
     else:
         return 'No uuid provided.', 400
 
-@user.route(USER_BASE_URL + '/<uuid>/followers', methods=['GET'])
+@user.route('/<uuid>/followers', methods=['GET'])
 def get_followers(uuid):
     """
         Get a user's followers
@@ -234,7 +235,7 @@ def get_followers(uuid):
         else:
             return 'User not found.', 400
 
-@user.route(USER_BASE_URL + '/follow', methods=['POST'])
+@user.route('/follow', methods=['POST'])
 def follow_user():
     """
         Creates relationship: originating user following target user
@@ -260,7 +261,7 @@ def follow_user():
     except Exception as e:
         return 'Something went wrong.', HTTPStatus.INTERNAL_SERVER_ERROR
 
-@user.route(USER_BASE_URL + '/unfollow', methods=['DELETE'])
+@user.route('/unfollow', methods=['DELETE'])
 def unfollow_user():
     """
         Removes relationship: originating user following target user
@@ -291,35 +292,7 @@ def unfollow_user():
 ########## Group Relationships ############
 ###########################################
 
-@user.route(USER_BASE_URL + '/create', methods=['POST'])
-def create_group():
-    """
-        Create a group
-    """
-    # Create group 
-    # Create membership record for group creator
-    pass
-
-@user.route(USER_BASE_URL + '/update', methods=['PUT'])
-def update_group_name():
-    """
-        Update the name of a group
-    """
-    # Check for admin status
-    # Change name
-    # Update DB
-    pass
-
-@user.route(USER_BASE_URL + '/delete', methods=['DELETE'])
-def delete_group():
-    """
-        Delete a group
-    """
-    # Check for admin status
-    # Delete self from DB
-    pass
-
-@user.route(USER_BASE_URL + '/join', methods=['POST'])
+@user.route('/join', methods=['POST'])
 def join_group():
     """
         Creates relationship: user belongs to group
@@ -360,33 +333,4 @@ def leave_group():
     """
     # Call leave group method
     pass
-
-def query_groups():
-    """
-        Find groups based on filter criteria
-    """
-    # Call query groups method
-    pass
-
-def get_group():
-    """
-        Get a group
-    """
-    # Call get group method
-    pass
-
-def get_all_groups():
-    """
-        Get all groups...why?
-    """
-    # Get all groups in database
-    pass
-
-def get_group_members():
-    """
-        Get all members of a group
-    """
-    # Call get all members method
-    pass
-
 
