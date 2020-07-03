@@ -3,12 +3,13 @@ from sqlalchemy.sql import text
 from http import HTTPStatus
 from app import db
 from .models import User, Follow
-from core.decorators import handle_exceptions
+from .schemas import UserSchema
 import os
 import json
 
 
 user = Blueprint('user', __name__)
+user_schema = UserSchema()
 
 USER_BASE_URL = '/user'
 
@@ -16,21 +17,30 @@ USER_BASE_URL = '/user'
 def get_user():
     """
         get:
-            summary: Get data of specific user.
-            description: Returns one user if given parameters match a user in the database.
-            parameters:
-                uuid: The uuid of a user
-                email: The email address of a user
-                name: The name of a user
+          summary: Get data of specific user.
+          description: Returns one user if given parameters match a user in the database.
+          parameters:
+            - in: query
+              name: uuid
+              required: false
+              description: The uuid of a user
+            - in: query
+              name: email
+              required: false
+              escription: The email address of a user
+            - in: query
+              name: name
+              required: false
+              description: The name of a user
             responses:
-                200:
-                    description: Returned when a user was found
-                400:
-                    description: Returned when no valid parameters were specified.
-                404:
-                    description: Returned when no matching user was found.
+              200:
+                description: Returned when a user was found
+              400:
+                description: Returned when no valid parameters were specified.
+              404:
+                description: Returned when no matching user was found.
     """
-    # Gety querystring args
+    # Get querystring args
     uuid = request.args.get('uuid', None)
     email = request.args.get('email', None)
     username = request.args.get('username', None)
@@ -47,13 +57,37 @@ def get_user():
 
     if user_data:
         # User was found, return as dictionary
-        return user_data.dict()
+        return user_schema.dump(user_data)
     else:
         return 'User not found.', 404
 
 @user.route(USER_BASE_URL + '/find', methods=['GET'])
 def query_users():
-    """"""
+    """
+        get:
+          summary: Query users.
+          description: Returns a list of users based on filter criteria.
+          parameters:
+            - in: query
+              name: username
+              required: false
+              description: The username of a user
+            - in: query
+              name: email
+              required: false
+              escription: The email address of a user
+            - in: query
+              name: name
+              required: false
+              description: The name of a user
+            responses:
+              200:
+                description: Returned when a user was found
+              400:
+                description: Returned when no valid parameters were specified.
+              404:
+                description: Returned when no matching user was found.
+    """
     # Get querystring args
     params = {
         'email': request.args.get('email', None),
@@ -71,7 +105,10 @@ def query_users():
 
 @user.route(USER_BASE_URL + '/create', methods=['POST'])
 def create_user():
-    """"""
+    """
+        Create a user
+    """
+    # Get data from request body
     data = request.json
 
     try:
@@ -91,7 +128,9 @@ def create_user():
 
 @user.route(USER_BASE_URL + '/update', methods=['PUT'])
 def update_user():
-    """"""
+    """
+        Update a user
+    """
     # Gety querystring args
     uuid = request.args.get('uuid', None)
     email = request.args.get('email', None)
@@ -125,21 +164,14 @@ def update_user():
 
     return user_data.dict()
 
-@user.route(USER_BASE_URL + '/delete', methods=['DELETE'])
-def delete_user():
-    """"""
-    # Gety querystring args
-    uuid = request.args.get('uuid', None)
-    email = request.args.get('email', None)
-    username = request.args.get('username', None)
-
-    # Query for user based on which args we get
+@user.route(USER_BASE_URL + '/delete/<uuid>', methods=['DELETE'])
+def delete_user(uuid):
+    """
+        Delete a user
+    """
+    # Query for user based on provided UUID
     if uuid:
         user_data = User.get_user(uuid=uuid)
-    elif email:
-        user_data = User.get_user(email=email)
-    elif username:
-        user_data = User.get_user(username=username)
     else:
         return 'Please provide either uuid, username, or email.', 400
 
@@ -152,7 +184,7 @@ def delete_user():
     except Exception as e:
         return e.args[0], 400
 
-    return {'deleted_user': username}
+    return {'deleted_user': username}, 204
 
 
 ###########################################
@@ -161,7 +193,9 @@ def delete_user():
 
 @user.route(USER_BASE_URL + '/<uuid>/following', methods=['GET'])
 def get_following(uuid):
-    """"""
+    """
+        Get list of other users a user is following
+    """
     if uuid:
         user = User.query.filter(User.uuid == uuid, User.archived == False).first()
 
@@ -181,7 +215,9 @@ def get_following(uuid):
 
 @user.route(USER_BASE_URL + '/<uuid>/followers', methods=['GET'])
 def get_followers(uuid):
-    """"""
+    """
+        Get a user's followers
+    """
     if uuid:
         user = User.query.filter(User.uuid == uuid, User.archived == False).first()
 
@@ -257,14 +293,18 @@ def unfollow_user():
 
 @user.route(USER_BASE_URL + '/create', methods=['POST'])
 def create_group():
-    """"""
+    """
+        Create a group
+    """
     # Create group 
     # Create membership record for group creator
     pass
 
 @user.route(USER_BASE_URL + '/update', methods=['PUT'])
 def update_group_name():
-    """"""
+    """
+        Update the name of a group
+    """
     # Check for admin status
     # Change name
     # Update DB
@@ -272,7 +312,9 @@ def update_group_name():
 
 @user.route(USER_BASE_URL + '/delete', methods=['DELETE'])
 def delete_group():
-    """"""
+    """
+        Delete a group
+    """
     # Check for admin status
     # Delete self from DB
     pass
@@ -313,27 +355,37 @@ def join_group():
         return '{} not found.'.format('target_user' if originating_user else 'originating_user')
 
 def leave_group():
-    """"""
+    """
+        Remove user from a group
+    """
     # Call leave group method
     pass
 
 def query_groups():
-    """"""
+    """
+        Find groups based on filter criteria
+    """
     # Call query groups method
     pass
 
 def get_group():
-    """"""
+    """
+        Get a group
+    """
     # Call get group method
     pass
 
 def get_all_groups():
-    """"""
+    """
+        Get all groups...why?
+    """
     # Get all groups in database
     pass
 
 def get_group_members():
-    """"""
+    """
+        Get all members of a group
+    """
     # Call get all members method
     pass
 

@@ -10,23 +10,28 @@ import os
 db = SQLAlchemy()
 
 def create_app():
+    # Create app
     app = Flask(__name__)
+    # Get current environment
     env = os.environ.get('ENV', 'DEV')
 
     app.config['SECRET_KEY'] = 'Dingobaby68+1 Or jeebus potat king56)' #this needs to be removed 
+    # Set database based on environment
     if env == 'DOCKER':
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(Config.BASE_DIR, 'db.sqlite')
     else:
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(Config.BASE_DIR, 'db.sqlite')
 
+    # Initialize DB
     db.init_app(app)
+    # Migrate DB
     migrate = Migrate(app, db)
 
     login_manager = LoginManager()
     login_manager.login_view = 'auth.login'
     login_manager.init_app(app)
 
-    from user.models import User
+    from app.modules.user.models import User
 
     @login_manager.user_loader
     def load_user(user_id):
@@ -42,7 +47,7 @@ def create_app():
     app.register_blueprint(main_blueprint)
 
     # blueprint for user app
-    from user.app import user as user_blueprint
+    from app.modules.user.app import user as user_blueprint
     app.register_blueprint(user_blueprint)
 
     return app
